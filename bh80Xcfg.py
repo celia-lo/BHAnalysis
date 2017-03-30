@@ -2,9 +2,6 @@ import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 #from RecoMET.METFilters.eeBadScFilter_cfi import *
 
-
-#TESGIT#
-
 process = cms.Process('ANA')
 
 process.load('Configuration.EventContent.EventContent_cff')
