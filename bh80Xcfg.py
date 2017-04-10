@@ -107,6 +107,7 @@ process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidate
 process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
 process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
+process.badGlobalMuonTaggerMAOD.tagggingMode  = cms.bool(True)
 #======================================================================
 
 # Bad EE supercrystal filter
@@ -299,34 +300,34 @@ for idmod in my_id_modules_ph:
     setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection)
 
 process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
-  beamSpot = cms.InputTag('offlineBeamSpot'),
-  electronTag = cms.InputTag("slimmedElectrons"),
-  muonTag = cms.InputTag("slimmedMuons"),
-  #jetTag =  cms.InputTag("slimmedJets"),
-  jetTag =  cms.InputTag("selectedUpdatedPatJetsUpdatedJEC"),
-  tauTag =  cms.InputTag("slimmedTaus"),
-  metTag =  cms.InputTag("slimmedMETs"),
-  photonTag = cms.InputTag("slimmedPhotons"),
-  rho_lable    = cms.InputTag("fixedGridRhoFastjetAll"),
-  ebRecHitTag = cms.untracked.InputTag("reducedEgamma", "reducedEBRecHits"),
-  eeRecHitTag = cms.untracked.InputTag("reducedEgamma", "reducedEERecHits"),
-  primaryVertex = cms.untracked.InputTag("offlineSlimmedPrimaryVertices"),
-  badChHadfilter = cms.InputTag("BadChargedCandidateFilter"),
-  badMufilter    = cms.InputTag("BadPFMuonFilter"),
-  triggerTag = cms.InputTag("TriggerResults","","HLT"),
-  filterTag = cms.InputTag("TriggerResults","","PAT"),
-  prescales = cms.InputTag("patTrigger"), 
-  verticesMiniAOD     = cms.InputTag("offlineSlimmedPrimaryVertices"),
-  conversionsMiniAOD  = cms.InputTag('reducedEgamma:reducedConversions'),
+  beamSpot           = cms.InputTag('offlineBeamSpot'),
+  electronTag        = cms.InputTag("slimmedElectrons"),
+  muonTag            = cms.InputTag("slimmedMuons"),
+  #jetTag            =  cms.InputTag("slimmedJets"),
+  jetTag             =  cms.InputTag("selectedUpdatedPatJetsUpdatedJEC"),
+  tauTag             =  cms.InputTag("slimmedTaus"),
+  metTag             =  cms.InputTag("slimmedMETs"),
+  photonTag          = cms.InputTag("slimmedPhotons"),
+  rho_lable          = cms.InputTag("fixedGridRhoFastjetAll"),
+  ebRecHitTag        = cms.untracked.InputTag("reducedEgamma", "reducedEBRecHits"),
+  eeRecHitTag        = cms.untracked.InputTag("reducedEgamma", "reducedEERecHits"),
+  primaryVertex      = cms.untracked.InputTag("offlineSlimmedPrimaryVertices"),
+  badChHadfilter     = cms.InputTag("BadChargedCandidateFilter"),
+  badMufilter        = cms.InputTag("BadPFMuonFilter"),
+  triggerTag         = cms.InputTag("TriggerResults","","HLT"),
+  filterTag          = cms.InputTag("TriggerResults","","PAT"),
+  prescales          = cms.InputTag("patTrigger"), 
+  verticesMiniAOD    = cms.InputTag("offlineSlimmedPrimaryVertices"),
+  conversionsMiniAOD = cms.InputTag('reducedEgamma:reducedConversions'),
 
-  eleVetoIdMap   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto"  ),
-  eleLooseIdMap  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose" ),
-  eleMediumIdMap = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
-  eleTightIdMap  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight" ),
+  eleVetoIdMap       = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto"  ),
+  eleLooseIdMap      = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose" ),
+  eleMediumIdMap     = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
+  eleTightIdMap      = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight" ),
  
-  phoLooseIdMap  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose" ),
-  phoMediumIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-  phoTightIdMap  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight" ),
+  phoLooseIdMap      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose" ),
+  phoMediumIdMap     = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
+  phoTightIdMap      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight" ),
  
   MCLabel = cms.untracked.bool(not (options.useHLT)),
   DEBUG = cms.untracked.bool(False)
@@ -340,7 +341,7 @@ process.p = cms.Path(
   (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *
   process.BadPFMuonFilter *		  # 80x new met filter
   process.BadChargedCandidateFilter *     # 80x new met filter
-  process.noBadGlobalMuonsMAOD *        # new filter to tackle duplicate muon
+  process.noBadGlobalMuonsMAOD *          # new filter to tackle duplicate muon (uses badGlobalMuonTaggerMAOD)
   process.bhana
 )
 #process.p +=cms.Sequence(process.JEC)
