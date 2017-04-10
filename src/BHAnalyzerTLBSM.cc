@@ -274,13 +274,7 @@ class BHAnalyzerTLBSM : public edm::EDAnalyzer {
 		float LeadingArr[4];    
 
 		//HLT info (Jets and MET)
-		//bool firedHLT_PFJet60_v2;
 		//bool firedHLT_PFJet140_v2;
-		//bool firedHLT_PFJet450_v2;
-		//bool firedHLT_PFHT300_v1;
-		//bool firedHLT_PFHT400_v1;
-		//bool firedHLT_PFHT600_v2;
-		//bool firedHLT_PFHT650_v2;
 		bool firedHLT_PFHT475;
 		bool firedHLT_PFHT800;
 		bool firedHLT_PFHT900;
@@ -604,13 +598,6 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   if (!isMCBH) {
 		// HLT results   
-		//firedHLT_PFJet60_v2  = false;
-		//firedHLT_PFJet140_v2 = false;
-		//firedHLT_PFJet450_v2 = false;
-		//firedHLT_PFHT300_v1  = false;
-		//firedHLT_PFHT400_v1  = false;
-		//firedHLT_PFHT600_v2  = false;
-		//firedHLT_PFHT650_v2  = false;
 		firedHLT_PFHT475  = false;
 		firedHLT_PFHT800  = false;
 		firedHLT_PFHT900  = false;
@@ -663,15 +650,6 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			//std::cout << "["<<i<<"] = " << triggerList[i]<<setw(40)<<
 			//": Prescale " << triggerPrescales->getPrescaleForIndex(i) << ": " << (tr[i].accept() ? "Event Passed" : "Event Failed") << endl;
 			if ( !tr[i].accept() == 1 ) continue;
-			//if( triggerList[i] == "HLT_PFJet60_v2")  { firedHLT_PFJet60_v2  = true; }
-			//if( triggerList[i] == "HLT_PFJet140_v2") { firedHLT_PFJet140_v2 = true; }
-			//if( triggerList[i] == "HLT_PFJet450_v2") { firedHLT_PFJet450_v2 = true; }
-			//if( triggerList[i] == "HLT_PFHT300_v1")  { firedHLT_PFHT300_v1  = true; }
-			//if( triggerList[i] == "HLT_PFHT400_v1")  { firedHLT_PFHT400_v1  = true; }
-			//if( triggerList[i] == "HLT_PFHT600_v2")  { firedHLT_PFHT600_v2  = true; }
-			//if( triggerList[i] == "HLT_PFHT650_v2")  { firedHLT_PFHT650_v2  = true; }
-			//if( triggerList[i] == "HLT_PFHT475_v3")  { firedHLT_PFHT475_v3  = true; }
-			//if( triggerList[i] == "HLT_PFHT800_v3")  { firedHLT_PFHT800_v3  = true; }
 			if( triggerList[i].find("HLT_PFHT475")!=std::string::npos)  { firedHLT_PFHT475 = true; }
 			if( triggerList[i].find("HLT_PFHT800")!=std::string::npos)  { firedHLT_PFHT800 = true; }
 			if( triggerList[i].find("HLT_PFHT900")!=std::string::npos)  { firedHLT_PFHT900 = true; }
@@ -1211,13 +1189,6 @@ void BHAnalyzerTLBSM::beginJob()
 	tree->Branch("isRealData" ,  &isRealData , "isRealData/I" );
 	tree->Branch("muon_d0"    ,  &muon_d0    , "muon_d0/F"    );                                                      
 
-	//tree->Branch("firedHLT_PFJet60_v2",&firedHLT_PFJet60_v2,"firedHLT_PFJet60_v2/O");
-	//tree->Branch("firedHLT_PFJet140_v2",&firedHLT_PFJet140_v2,"firedHLT_PFJet140_v2/O");
-	//tree->Branch("firedHLT_PFJet450_v2",&firedHLT_PFJet450_v2,"firedHLT_PFJet450_v2/O");
-	//tree->Branch("firedHLT_PFHT300_v1",&firedHLT_PFHT300_v1,"firedHLT_PFHT300_v1/O");
-	//tree->Branch("firedHLT_PFHT400_v1",&firedHLT_PFHT400_v1,"firedHLT_PFHT400_v1/O");
-	//tree->Branch("firedHLT_PFHT650_v2",&firedHLT_PFHT650_v2,"firedHLT_PFHT650_v2/O");
-	//tree->Branch("firedHLT_PFHT600_v2",&firedHLT_PFHT600_v2,"firedHLT_PFHT600_v2/O");
 	tree->Branch("firedHLT_PFHT475" ,  &firedHLT_PFHT475 ,  "firedHLT_PFHT475/O" );
 	tree->Branch("firedHLT_PFHT800" ,  &firedHLT_PFHT800 ,  "firedHLT_PFHT800/O" );
 	tree->Branch("firedHLT_PFHT900" ,  &firedHLT_PFHT900 ,  "firedHLT_PFHT900/O" );
