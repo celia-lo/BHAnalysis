@@ -14,7 +14,6 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 # Message Logger settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.destinations = ['cout', 'cerr']
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 #------------------------------------------------------------------------------------
 # Options
@@ -22,7 +21,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 options = VarParsing.VarParsing()
 options.register('GlobalTag',
-                "auto",
+                "null",
                 VarParsing.VarParsing.multiplicity.singleton,
                 VarParsing.VarParsing.varType.string,
                 "GlobalTag to be used")
@@ -31,10 +30,46 @@ options.register('outputFile',
                 VarParsing.VarParsing.multiplicity.singleton,
                 VarParsing.VarParsing.varType.string,
                 "filename of output root file")
+options.register('inputFile',
+                "file:input.root",
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.string,
+                "filename of miniAOD")
+options.register('isMC',
+                False,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.bool,
+                "Switch for running MC samples")
+options.register('useHLT',
+                True,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.bool,
+                "Switch for getting HLT and MET filter trigger results, use False for MC without HLT sim")
+options.register('maxEvent',
+                100,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.int,
+                "max event to process")
+options.register('reportEvery',
+                1,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.int,
+                "Report cerr Every X events")
+
 
 options.parseArguments()
 
+if(options.isMC):
+    inputFileList = options.inputFile.split(",")
+    readFiles     = cms.untracked.vstring()
+    for f in inputFileList:
+        f = "file:"+f
+        readFiles.extend([f])
+    print "=================Running over MC samples=================="
+    print "Input MiniAOD =", readFiles 
+    print "Output NTuple =", options.outputFile
 print "Going to use GlobalTag = %s"% options.GlobalTag
+process.MessageLogger.cerr.FwkReport.reportEvery = options.reportEvery
 
 #------------------------------------------------------------------------------------
 # Set the process options -- Display summary at the end, enable unscheduled execution
@@ -71,7 +106,7 @@ process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidate
 #For tagging mode, i.e. saving the decision
 process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
-#process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
+process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
 #======================================================================
 
 # Bad EE supercrystal filter
@@ -79,7 +114,7 @@ process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
 
 #configurable options ==============================================
-runOnData=True #data/MC switch
+runOnData=options.isMC #data/MC switch
 usePrivateSQlite=False #use external JECs (sqlite file)
 useHFCandidates=True #create an additionnal NoHF slimmed MET collection if the option is set to false
 applyResiduals=True #application of residual JES corrections. Setting this to false removes the residual JES corrections.
@@ -91,14 +126,10 @@ applyResiduals=True #application of residual JES corrections. Setting this to fa
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
-
-if runOnData:
-  #process.GlobalTag.globaltag = '80X_dataRun2_Prompt_v14'           # For Prompt-RECO 2016H only
-  #process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v7' # For reMiniAOD
-  process.GlobalTag.globaltag = options.GlobalTag 
+if options.GlobalTag=="null":
+    print " Please give a valid global tag! Check: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD"
 else:
-  #process.GlobalTag.globaltag = 'auto:run2_mc'
-  process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_RealisticBS_25ns_13TeV2016_v1_mc'
+    process.GlobalTag.globaltag = options.GlobalTag 
 #===================================================================
 
 #==For applying Jet energy correction from a sqlite file ======================
@@ -176,18 +207,22 @@ process.out = cms.OutputModule('PoolOutputModule',
   overrideInputFileSplitLevels = cms.untracked.bool(True)
 )
 
-process.source = cms.Source("PoolSource",fileNames = cms.untracked.vstring( 
-#'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016B/JetHT/MINIAOD/23Sep2016-v3/00000/00144F9E-BA97-E611-A8B0-00259074AE48.root'
-#'file:/afs/cern.ch/user/k/kakwok/work/public/CMSSW_7_6_5/src/Blackhole/BHAnalysis/eos/cms/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/D41FEE23-49B5-E511-B288-3417EBE6471D.root'
-#'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016C/JetHT/MINIAOD/PromptReco-v2/000/275/890/00000/B08F2A69-5A3F-E611-BA56-02163E01477C.root'
-#'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016H/JetHT/MINIAOD/PromptReco-v2/000/281/256/00000/CEF4A29D-6E82-E611-8CF7-02163E01215C.root'
-'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016B/JetHT/MINIAOD/03Feb2017_ver2-v2/110000/003A92CA-6FED-E611-82CD-0025905B8590.root'
-#'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016B/JetHT/MINIAOD/23Sep2016-v3/00000/00144F9E-BA97-E611-A8B0-00259074AE48.root'
-#'file:/afs/cern.ch/user/k/kakwok/work/public/Blackhole/CMSSW_8_1_0_pre16/src/BH/BHAnalysis/BH2016G_badEvents_MINIAOD_reRECO.root'
- )
-)
+#For data, ignore option input
+#For MC, build the list of inputFiles from input
+if (options.isMC):
+    process.source = cms.Source("PoolSource",fileNames = readFiles)
+else:
+    process.source = cms.Source("PoolSource",fileNames = cms.untracked.vstring( 
+    #'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016B/JetHT/MINIAOD/23Sep2016-v3/00000/00144F9E-BA97-E611-A8B0-00259074AE48.root'
+    #'file:/afs/cern.ch/user/k/kakwok/work/public/CMSSW_7_6_5/src/Blackhole/BHAnalysis/eos/cms/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/D41FEE23-49B5-E511-B288-3417EBE6471D.root'
+    #'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016C/JetHT/MINIAOD/PromptReco-v2/000/275/890/00000/B08F2A69-5A3F-E611-BA56-02163E01477C.root'
+    #'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016H/JetHT/MINIAOD/PromptReco-v2/000/281/256/00000/CEF4A29D-6E82-E611-8CF7-02163E01215C.root'
+    'file:/afs/cern.ch/user/k/kakwok/eos/cms/store/data/Run2016B/JetHT/MINIAOD/03Feb2017_ver2-v2/110000/003A92CA-6FED-E611-82CD-0025905B8590.root'
+    #'file:/afs/cern.ch/user/k/kakwok/work/public/Blackhole/CMSSW_8_1_0_pre16/src/BH/BHAnalysis/BH2016G_badEvents_MINIAOD_reRECO.root'
+    ))
+
 # How many events to process
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvent))
 
 #==============================================================================================
 
@@ -293,18 +328,19 @@ process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
   phoMediumIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
   phoTightIdMap  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight" ),
  
-  MCLabel = cms.untracked.bool(False),                               
-  DEBUG = cms.untracked.bool(False)                               
+  MCLabel = cms.untracked.bool(not (options.useHLT)),
+  DEBUG = cms.untracked.bool(False)
 )
 
 
 process.p = cms.Path(
-  process.HBHENoiseFilterResultProducer * # get HBHENoiseFilter decisions
-  process.ApplyBaselineHBHENoiseFilter *  # filter based on HBHENoiseFilter decisions
-  process.ApplyHBHEIsoNoiseFilter *       # filter for HBHENoise isolation
+  #process.HBHENoiseFilterResultProducer * # get HBHENoiseFilter decisions
+  #process.ApplyBaselineHBHENoiseFilter *  # filter based on HBHENoiseFilter decisions
+  #process.ApplyHBHEIsoNoiseFilter *       # filter for HBHENoise isolation
   (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *
   process.BadPFMuonFilter *		  # 80x new met filter
   process.BadChargedCandidateFilter *     # 80x new met filter
+  process.noBadGlobalMuonsMAOD *        # new filter to tackle duplicate muon
   process.bhana
 )
 #process.p +=cms.Sequence(process.JEC)
