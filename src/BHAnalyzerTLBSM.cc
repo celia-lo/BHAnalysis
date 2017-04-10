@@ -799,12 +799,13 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			cout <<"Ele["<<elecnt<<"]" <<
 				" | n_el = "<< electrons->size()<<
 				" | pt = "<<e->pt()<<
-				" | dz = "<<e->gsfTrack()->dz( vertex_.position() )<<
 				" | eta = "<<fabs(e->eta())<<
-				" | dxy = "<<fabs(e->gsfTrack()->dxy(vertex_.position()))<< 
-				" | hit = "<<e->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS)<<
-				" | passConvVeto(a) = "<<!ConversionTools::hasMatchedConversion(*e,conversions,theBeamSpot->position())<<
-				" | passMediumId = "<<(*medium_id_decisions)[e]<<
+                // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
+				//" | dz = "<<e->gsfTrack()->dz( vertex_.position() )<<
+				//" | dxy = "<<fabs(e->gsfTrack()->dxy(vertex_.position()))<< 
+				//" | hit = "<<e->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::MISSING_INNER_HITS)<<
+				//" | passConvVeto(a) = "<<!ConversionTools::hasMatchedConversion(*e,conversions,theBeamSpot->position())<<
+				//" | passMediumId = "<<(*medium_id_decisions)[e]<<
 				" | "<<endl; 
 		}
 		ST_noCut += e->et();
@@ -853,7 +854,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 				" | pt = "<< ph->pt()<<
 				" | eta = "<< fabs(ph->superCluster()->eta())<<
 				" | phi = " << ph->superCluster()->phi() <<
-				" | pix_seed = "<< ph->hasPixelSeed()<<
+                // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
+				//" | pix_seed = "<< ph->hasPixelSeed()<<
 				" | "<<endl;
 		}
 		ST_noCut += ph->et();
@@ -899,18 +901,24 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 				" | n_mu = "<< muons.size()<<
 				" | pt = "<<mu->pt()<<
 				" | eta = "<<fabs(mu->eta())<<
-				" | fabs(vtx_dxy) = "<<fabs(mu->globalTrack()->dxy(vertex_.position()))<<
+                // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
+				//" | fabs(vtx_dxy) = "<<fabs(mu->globalTrack()->dxy(vertex_.position()))<<
 				" | "<<endl;
 		}
-
-		if (mu->isPFMuon() && mu->isTrackerMuon() &&
-			(mu->numberOfMatchedStations()==0||
-			 mu->innerTrack()->numberOfValidHits()<7||
-			(mu->innerTrack()->numberOfValidHits()<10 && mu->innerTrack()->numberOfLostHits()>0)
-			)
-		    )
+        // Apply only on leading muon
+		if ( mucnt==0 && mu->isPFMuon() && mu->isTrackerMuon() &&
+			    (mu->numberOfMatchedStations()==0||
+			     mu->innerTrack()->numberOfValidHits()<7||
+			    (mu->innerTrack()->numberOfValidHits()<10 && mu->innerTrack()->numberOfLostHits()>0)
+			    )
+		   )
 		{
 			passed_Dimafilter = false;
+            if(DEBUG_){
+                cout<<"Mun["<<mucnt<<"] | nMactchedStations= "<< mu->numberOfMatchedStations()<<
+                " | nValidHit = "<< mu->innerTrack()->numberOfValidHits() <<
+                " | nLostHit  = "<< mu->innerTrack()->numberOfLostHits()<<endl;
+            }
 		}
 		ST_noCut += mu->et();
 		if(
@@ -945,8 +953,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       MuPFdBiso[ngoodmuons-1] = (mu->pfIsolationR04().sumChargedHadronPt + max(0., mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
 		}//muonID
 	}
-	if (!passed_Dimafilter){
-	//	cout << "Debug: Has badMuon!"<<endl;
+	if (DEBUG_){
+		cout << "passed_DimaFilter = "<<(passed_Dimafilter)<<endl;
 	}
 
 	//Sorting
