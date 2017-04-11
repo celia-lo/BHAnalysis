@@ -78,21 +78,6 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
 )
 
-# HBHE noise filter (next 2 lines) added on 24 July 2015
-process.load('CommonTools.RecoAlgos.HBHENoiseFilterResultProducer_cfi')
-process.HBHENoiseFilterResultProducer.minZeros = cms.int32(99999)
-
-process.ApplyBaselineHBHENoiseFilter = cms.EDFilter('BooleanFlagFilter',
-   inputLabel = cms.InputTag('HBHENoiseFilterResultProducer','HBHENoiseFilterResult'),
-   reverseDecision = cms.bool(False)
-)
-
-
-process.ApplyHBHEIsoNoiseFilter = cms.EDFilter('BooleanFlagFilter',
-    inputLabel = cms.InputTag('HBHENoiseFilterResultProducer','HBHEIsoNoiseFilterResult'),
-    reverseDecision = cms.bool(False)
-)
-
 #===MET filters in 80X ==============================================
 process.load('RecoMET.METFilters.BadPFMuonFilter_cfi')
 process.BadPFMuonFilter.muons = cms.InputTag("slimmedMuons")
@@ -109,9 +94,6 @@ process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
 process.badGlobalMuonTaggerMAOD.tagggingMode  = cms.bool(True)
 #======================================================================
-
-# Bad EE supercrystal filter
-#process.load(eeBadScFilter)
 
 
 #configurable options ==============================================
@@ -314,6 +296,7 @@ process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
   primaryVertex      = cms.untracked.InputTag("offlineSlimmedPrimaryVertices"),
   badChHadfilter     = cms.InputTag("BadChargedCandidateFilter"),
   badMufilter        = cms.InputTag("BadPFMuonFilter"),
+  badGlobalMufilter  = cms.InputTag("badGlobalMuonTaggerMAOD"),
   triggerTag         = cms.InputTag("TriggerResults","","HLT"),
   filterTag          = cms.InputTag("TriggerResults","","PAT"),
   prescales          = cms.InputTag("patTrigger"), 
@@ -335,9 +318,6 @@ process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
 
 
 process.p = cms.Path(
-  #process.HBHENoiseFilterResultProducer * # get HBHENoiseFilter decisions
-  #process.ApplyBaselineHBHENoiseFilter *  # filter based on HBHENoiseFilter decisions
-  #process.ApplyHBHEIsoNoiseFilter *       # filter for HBHENoise isolation
   (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *
   process.BadPFMuonFilter *		  # 80x new met filter
   process.BadChargedCandidateFilter *     # 80x new met filter
