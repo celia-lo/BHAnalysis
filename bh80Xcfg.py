@@ -91,13 +91,49 @@ process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidate
 #For tagging mode, i.e. saving the decision
 process.BadChargedCandidateFilter.taggingMode = cms.bool(True)
 
-process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
-process.badGlobalMuonTaggerMAOD.tagggingMode  = cms.bool(True)
+#==Correcting MET based on badGlobalMuon on-the-fly ====================================================
+# IMPORTANT! see: https://twiki.cern.ch/twiki/bin/view/CMSPublic/ReMiniAOD03Feb2017Notes
+#=======================================================================================================
+if(options.isMC):
+    ## Following line is for default MET for Type1 corrections.
+    from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+    ## Following line is for cleaning bad muon
+    from PhysicsTools.PatUtils.tools.muonRecoMitigation import muonRecoMitigation
+    
+    # Now you are creating the bad muon corrected MET
+    process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
+    process.badGlobalMuonTaggerMAOD.taggingMode   = cms.bool(True)
+    process.cloneGlobalMuonTaggerMAOD.taggingMode = cms.bool(True)
+    
+    muonRecoMitigation(
+        process = process,
+        pfCandCollection = "packedPFCandidates", #input PF Candidate Collection
+        runOnMiniAOD = True, #To determine if you are running on AOD or MiniAOD
+        selection="", 
+        muonCollection="", 
+        cleanCollName="cleanMuonsPFCandidates", #output pf candidate collection ame
+        cleaningScheme="all",
+        postfix="" #Use if you would like to add a post fix to your muon / pf collections
+    )
+    runMetCorAndUncFromMiniAOD(
+        process,
+        isData=not(options.isMC),
+        pfCandColl="cleanMuonsPFCandidates",
+        recoMetFromPFCs=True,
+        postfix="MuClean"
+    )
+    process.mucorMET = cms.Sequence(      
+        process.badGlobalMuonTaggerMAOD *
+        process.cloneGlobalMuonTaggerMAOD *
+        process.badMuons *              # Needed if you are using cleaning mode "all"
+        process.cleanMuonsPFCandidates *
+        process.fullPatMetSequenceMuClean
+    )
 #======================================================================
 
 
 #configurable options ==============================================
-runOnData=options.isMC #data/MC switch
+runOnData=not(options.isMC) #data/MC switch
 usePrivateSQlite=False #use external JECs (sqlite file)
 useHFCandidates=True #create an additionnal NoHF slimmed MET collection if the option is set to false
 applyResiduals=True #application of residual JES corrections. Setting this to false removes the residual JES corrections.
@@ -281,14 +317,19 @@ my_id_modules_ph = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhot
 for idmod in my_id_modules_ph:
     setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection)
 
+if(options.isMC):
+  muonInputTag = cms.InputTag('slimmedMETsMuClean')
+else:
+  muonInputTag = cms.InputTag('slimmedMETs')
+
 process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
   beamSpot           = cms.InputTag('offlineBeamSpot'),
   electronTag        = cms.InputTag("slimmedElectrons"),
   muonTag            = cms.InputTag("slimmedMuons"),
-  #jetTag            =  cms.InputTag("slimmedJets"),
-  jetTag             =  cms.InputTag("selectedUpdatedPatJetsUpdatedJEC"),
-  tauTag             =  cms.InputTag("slimmedTaus"),
-  metTag             =  cms.InputTag("slimmedMETs"),
+  #jetTag            = cms.InputTag("slimmedJets"),
+  jetTag             = cms.InputTag("selectedUpdatedPatJetsUpdatedJEC"),
+  tauTag             = cms.InputTag("slimmedTaus"),
+  metTag             = muonInputTag,
   photonTag          = cms.InputTag("slimmedPhotons"),
   rho_lable          = cms.InputTag("fixedGridRhoFastjetAll"),
   ebRecHitTag        = cms.untracked.InputTag("reducedEgamma", "reducedEBRecHits"),
@@ -296,7 +337,6 @@ process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
   primaryVertex      = cms.untracked.InputTag("offlineSlimmedPrimaryVertices"),
   badChHadfilter     = cms.InputTag("BadChargedCandidateFilter"),
   badMufilter        = cms.InputTag("BadPFMuonFilter"),
-  badGlobalMufilter  = cms.InputTag("badGlobalMuonTaggerMAOD"),
   triggerTag         = cms.InputTag("TriggerResults","","HLT"),
   filterTag          = cms.InputTag("TriggerResults","","PAT"),
   prescales          = cms.InputTag("patTrigger"), 
@@ -316,12 +356,26 @@ process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
   DEBUG = cms.untracked.bool(False)
 )
 
+if(options.isMC):
+    process.p = cms.Path(
+      (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *  # electron/photon ID
+      process.BadPFMuonFilter *		          # 80x new met filter
+      process.BadChargedCandidateFilter *     # 80x new met filter
+      process.mucorMET  *
+      process.fullPatMetSequence * 
+      process.bhana
+    )
+else:
+    process.p = cms.Path(
+      (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *  # electron/photon ID
+      process.BadPFMuonFilter *		          # 80x new met filter
+      process.BadChargedCandidateFilter *     # 80x new met filter
+      process.bhana
+    )
 
-process.p = cms.Path(
-  (process.egmPhotonIDSequence+process.egmGsfElectronIDSequence) *
-  process.BadPFMuonFilter *		  # 80x new met filter
-  process.BadChargedCandidateFilter *     # 80x new met filter
-  process.noBadGlobalMuonsMAOD *          # new filter to tackle duplicate muon (uses badGlobalMuonTaggerMAOD)
-  process.bhana
-)
+#Re-correct MET on-the-fly for MC only
+#if(options.isMC):
+#  process.p *=  process.mucorMET * process.fullPatMetSequence           # For correcting badGlobal muons
+#
+#process.p *= process.bhana
 #process.p +=cms.Sequence(process.JEC)

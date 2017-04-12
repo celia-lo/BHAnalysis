@@ -164,6 +164,7 @@ class BHAnalyzerTLBSM : public edm::EDAnalyzer {
 		// Bad muon, bad charge-hadron tokens
 		edm::EDGetTokenT<bool> BadPFMuonFilterToken_;
 		edm::EDGetTokenT<bool> BadChCandFilterToken_;
+		//edm::EDGetTokenT<bool> BadGlobalMuonFilterToken_;
 
 
 		//TTree
@@ -285,8 +286,8 @@ class BHAnalyzerTLBSM : public edm::EDAnalyzer {
 		bool firedHLT_PFJet450          ;
 
 
-		// bool passed_HBHENoiseFilter;
-		// bool passed_HBHENoiseIsoFilter;
+		 bool passed_HBHENoiseFilter;
+		 bool passed_HBHENoiseIsoFilter;
 		// bool passed_hcalLaserEventFilter;
 		// bool passed_ecalLaserCorrFilter;
 		// bool passed_trkPOGFilters;
@@ -304,7 +305,7 @@ class BHAnalyzerTLBSM : public edm::EDAnalyzer {
 		bool passed_filterbadChCandidate;
 		bool passed_filterbadPFMuon;
 		bool passed_Dimafilter;
-		bool passed_GiovanniFilter;
+		//bool passed_nobadGlobalMuon;
 
 		//TODO 
 		double Reliso_el;
@@ -353,12 +354,13 @@ BHAnalyzerTLBSM::BHAnalyzerTLBSM(const edm::ParameterSet& iConfig):
 	jetToken_                 = mayConsume<edm::View<pat::Jet> >(iConfig.getParameter<edm::InputTag>("jetTag"));
 	tauToken_                 = mayConsume<edm::View<pat::Tau> >(iConfig.getParameter<edm::InputTag>("tauTag"));
 	metToken_                 = mayConsume<edm::View<pat::MET> >(iConfig.getParameter<edm::InputTag>("metTag"));
-        //rhoToken_                 = consumes<double>(rhoLabel_)
-        rhoToken_                 = consumes<double>(iConfig.getParameter<edm::InputTag>("rho_lable"));
+    //rhoToken_                 = consumes<double>(rhoLabel_)
+    rhoToken_                 = consumes<double>(iConfig.getParameter<edm::InputTag>("rho_lable"));
 	BadChCandFilterToken_     = consumes<bool>(iConfig.getParameter<edm::InputTag>("badChHadfilter")),
 	BadPFMuonFilterToken_     = consumes<bool>(iConfig.getParameter<edm::InputTag>("badMufilter")),
-        triggerToken_             = consumes<TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerTag"));
-        filterToken_              = consumes<TriggerResults>(iConfig.getParameter<edm::InputTag>("filterTag"));
+	//BadGlobalMuonFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("badGlobalMuonTaggerMAOD")),
+    triggerToken_             = consumes<TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerTag"));
+    filterToken_              = consumes<TriggerResults>(iConfig.getParameter<edm::InputTag>("filterTag"));
 }
 
 
@@ -509,6 +511,10 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	iEvent.getByToken(BadPFMuonFilterToken_, ifilterbadPFMuon);
 	passed_filterbadPFMuon = *ifilterbadPFMuon;
 
+	//edm::Handle<bool> ifilterbadGlobalMuon;
+	//iEvent.getByToken(BadGlobalMuonFilterToken_, ifilterbadGlobalMuon);
+	//passed_nobadGlobalMuon = *ifilterbadGlobalMuon;
+
   if (!isMCBH) {
 		edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
 		iEvent.getByToken(triggerPrescales_, triggerPrescales);
@@ -614,8 +620,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		tr = *h_trigRes;
 
 		// MET filter results   
-		// passed_HBHENoiseFilter = false;
-		// passed_HBHENoiseIsoFilter = false;
+		passed_HBHENoiseFilter = false;
+		passed_HBHENoiseIsoFilter = false;
 		// passed_hcalLaserEventFilter = false;
 		// passed_ecalLaserCorrFilter = false;
 		// passed_trkPOGFilters = false;
@@ -631,7 +637,7 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		passed_eeBadScFilter = false;
 		passed_METFilters = false;
 		passed_Dimafilter = true;
-		passed_GiovanniFilter = false;
+		//passed_nobadGlobalMuon = false;
 
 		TriggerResults fr;
 		Handle<TriggerResults> h_filtRes;
@@ -670,8 +676,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			//std::cout << "["<<i<<"] = " << filterList[i]<<setw(40)<<
 			//": " << (fr[i].accept() ? "Event Passed" : "Event Failed") << endl;
 			if ( !fr[i].accept() == 1 ) continue;
-			// if( filterList[i] == "Flag_HBHENoiseFilter")                     {  passed_HBHENoiseFilter = true; }    // needs to be re-run manually
-			// if( filterList[i] == "Flag_HBHENoiseIsoFilter")                  { passed_HBHENoiseIsoFilter = true; }  // needs to be re-run manually
+			if( filterList[i] == "Flag_HBHENoiseFilter")                     {  passed_HBHENoiseFilter = true; }    // provide by MET group again Apr2017 
+			if( filterList[i] == "Flag_HBHENoiseIsoFilter")                  { passed_HBHENoiseIsoFilter = true; }  // provide by MET group again Apr2017 
 			// if( filterList[i] == "Flag_hcalLaserEventFilter")                { passed_hcalLaserEventFilter = true; } // deprecated
 			// if( filterList[i] == "Flag_ecalLaserCorrFilter")                 { passed_ecalLaserCorrFilter = true; } // deprecated
 			// if( filterList[i] == "Flag_trkPOGFilters")                       { passed_trkPOGFilters = true; } // deprecated
@@ -685,14 +691,16 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 			if( filterList[i] == "Flag_EcalDeadCellBoundaryEnergyFilter")    { passed_EcalDeadCellBoundaryEnergyFilter = true; }   // under scrutiny
 			if( filterList[i] == "Flag_goodVertices")                        { passed_goodVertices = true; }
 			if( filterList[i] == "Flag_eeBadScFilter")                       { passed_eeBadScFilter = true; }
-			if( filterList[i] == "Flag_noBadMuons")                          { passed_GiovanniFilter = true; } // new Flag in re-MiniAOD
+			//if( filterList[i] == "Flag_noBadMuons")                          { passed_nobadGlobalMuon = true; } // Flag in re-MiniAOD for data only
 			if( filterList[i] == "Flag_METFilters")                          { passed_METFilters = true; } // be careful using this -- check documentation
 		}
-		//For taggingMode=false(default), failed events are skimmed.
-		//To skip the event based on the filter under taggingMode, add return after printing results.
-		//if(!passed_filterbadPFMuon)      {cout<<"Failed badPFMuon filter."<<endl;}
-		//if(!passed_filterbadChCandidate) {cout <<"Failed badChCandidate filter."<<endl;}
+		
 	}
+    //For taggingMode=false(default), failed events are skimmed.
+    //To skip the event based on the filter under taggingMode, add return after printing results.
+    if(!passed_filterbadPFMuon)      {cout <<"Failed badPFMuon filter."<<endl;}
+    if(!passed_filterbadChCandidate) {cout <<"Failed badChCandidate filter."<<endl;}
+    //if(!passed_nobadGlobalMuon)      {cout <<"Failed nobadGlobalMuon filter."<<endl;}
 
 	for(edm::View<pat::Jet>::const_iterator jet = jets.begin(); jet!=jets.end(); ++jet){     
 		jetcnt++;  
@@ -1197,8 +1205,8 @@ void BHAnalyzerTLBSM::beginJob()
 	tree->Branch("firedHLT_AK8PFJet450"        ,  &firedHLT_AK8PFJet450        ,  "firedHLT_AK8PFJet450/O" );
 	tree->Branch("firedHLT_PFJet450"           ,  &firedHLT_PFJet450           ,  "firedHLT_PFJet450/O" );
 
-	//tree->Branch("passed_HBHENoiseFilter", &passed_HBHENoiseFilter, "passed_HBHENoiseFilter/O"); 
-	//tree->Branch("passed_HBHENoiseIsoFilter", &passed_HBHENoiseIsoFilter, "passed_HBHENoiseIsoFilter/O"); 
+	tree->Branch("passed_HBHENoiseFilter", &passed_HBHENoiseFilter, "passed_HBHENoiseFilter/O"); 
+	tree->Branch("passed_HBHENoiseIsoFilter", &passed_HBHENoiseIsoFilter, "passed_HBHENoiseIsoFilter/O"); 
 	//tree->Branch("passed_hcalLaserEventFilter", &passed_hcalLaserEventFilter, "passed_hcalLaserEventFilter/O"); 
 	//tree->Branch("passed_ecalLaserCorrFilter", &passed_ecalLaserCorrFilter, "passed_ecalLaserCorrFilter/O"); 
 	//tree->Branch("passed_trkPOGFilters", &passed_trkPOGFilters, "passed_trkPOGFilters/O"); 
@@ -1215,7 +1223,7 @@ void BHAnalyzerTLBSM::beginJob()
 	tree->Branch("passed_filterbadChCandidate"               ,  &passed_filterbadChCandidate               ,  "passed_filterbadChCandidate/O"); 
 	tree->Branch("passed_filterbadPFMuon"                    ,  &passed_filterbadPFMuon                    ,  "passed_filterbadPFMuon/O"); 
 	tree->Branch("passed_Dimafilter"                         ,  &passed_Dimafilter                         ,  "passed_Dimafilter/O"); 
-	tree->Branch("passed_GiovanniFilter"                     ,  &passed_GiovanniFilter                     ,  "passed_GiovanniFilter/O"); 
+	//tree->Branch("passed_nobadGlobalMuon"                    ,  &passed_nobadGlobalMuon                    ,  "passed_nobadGlobalMuon/O"); 
 	tree->Branch("passed_METFilters"                         ,  &passed_METFilters                         ,  "passed_METFilters/O"); 
 
 	for (size_t i=0; i<cutNames_.size(); ++i)
