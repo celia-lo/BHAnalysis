@@ -9,7 +9,8 @@ Topdir="/afs/cern.ch/user/k/kakwok/eos/cms/store/mc/RunIISummer16MiniAODv2"
 Outdir=""
 datasetClass = "BlackHole_BH2_MD6000_MBH*_n4*"
 GlobalTag    = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
-isFastSim=False
+isFastSim    =False
+run          =False
 
 #Get all the files given a dataset name (one mass point)
 def getFlist(isFastSim,Topdir,dataset):
@@ -40,14 +41,17 @@ def getDatasetNames(Topdir,datasetClass):
 datasets = getDatasetNames(Topdir,datasetClass)
 
 for dataset in datasets:
-    print " Working on this masspoint now: %s" % dataset
+    print "\n Working on this masspoint now: %s" % dataset
     flist = getFlist(isFastSim,Topdir,dataset)
     #print flist
     if(len(flist)>0):
     	cmd = "cmsRun bh80Xcfg.py inputFile=%s outputFile=%s isMC=True useHLT=True maxEvent=-1 reportEvery=1000 GlobalTag=%s "%(flist['inputFile'], flist['outputFile'],GlobalTag)
     	if not(os.path.exists(flist['outputFile'])):
+            if(run):
     	        print cmd
-    	        os.system(cmd)
+                os.system(cmd)
+            else:
+    	        print cmd
     	else:
     	        print "Already produced this masspoint %s...skipping" % dataset
     else:
