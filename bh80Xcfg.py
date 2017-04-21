@@ -99,7 +99,10 @@ if(options.isMC):
     from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     ## Following line is for cleaning bad muon
     from PhysicsTools.PatUtils.tools.muonRecoMitigation import muonRecoMitigation
-    
+
+    runMetCorAndUncFromMiniAOD(process,
+                          isData=not(options.isMC)
+    )    
     # Now you are creating the bad muon corrected MET
     process.load('RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff')
     process.badGlobalMuonTaggerMAOD.taggingMode   = cms.bool(True)
