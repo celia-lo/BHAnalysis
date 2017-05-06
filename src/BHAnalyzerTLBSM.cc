@@ -710,6 +710,7 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 				" | n_jets = "<<jets.size()<<
 				" | pt = "<<jet->pt()<<
 				" | eta = "<<fabs(jet->eta())<<
+				" | phi = "<<(jet->phi())<<
 				" | NoD = "<<jet->numberOfDaughters()<<
 				" | NHE = "<<jet->neutralHadronEnergyFraction()<<
 				" | CHE = "<<jet->chargedHadronEnergyFraction()<<
@@ -792,6 +793,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 				" | n_el = "<< electrons->size()<<
 				" | pt = "<<e->pt()<<
 				" | eta = "<<fabs(e->eta())<<
+				" | phi = "<<e->phi()<<
+				" | isMedium = "<<(*medium_id_decisions)[e]<<
                 // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
 				//" | dz = "<<e->gsfTrack()->dz( vertex_.position() )<<
 				//" | dxy = "<<fabs(e->gsfTrack()->dxy(vertex_.position()))<< 
@@ -846,6 +849,7 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 				" | pt = "<< ph->pt()<<
 				" | eta = "<< fabs(ph->superCluster()->eta())<<
 				" | phi = " << ph->superCluster()->phi() <<
+				" | isMedium = " << (*medium_id_decisions_ph)[ph] <<
                 // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
 				//" | pix_seed = "<< ph->hasPixelSeed()<<
 				" | "<<endl;
@@ -889,13 +893,30 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	for(edm::View<pat::Muon>::const_iterator mu = muons.begin(); mu!=muons.end(); ++mu){
 		++mucnt;
 		if(DEBUG_){
-			cout <<"Mun["<<mucnt<<"]" <<
-				" | n_mu = "<< muons.size()<<
-				" | pt = "<<mu->pt()<<
-				" | eta = "<<fabs(mu->eta())<<
-                // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
-				//" | fabs(vtx_dxy) = "<<fabs(mu->globalTrack()->dxy(vertex_.position()))<<
-				" | "<<endl;
+            if(!mu->isTrackerMuon()){
+			    cout <<"Mun["<<mucnt<<"]" <<
+			    	" | n_mu = "<< muons.size()<<
+			    	" | pt = "<<mu->pt()<<
+			    	" | eta = "<<fabs(mu->eta())<<
+			    	" | isPFMuon = "<< mu->isPFMuon()<<
+			    	" | isTrackerMuon() = "<< mu->isTrackerMuon()<<
+			    	" | isTightMuon() = "<< mu->isTightMuon(vertex_)<<
+                    // TODO:a Vector of track causes derefrencing problem in run-time. Review these lines if you un-comment
+			    	//" | fabs(vtx_dxy) = "<<fabs(mu->globalTrack()->dxy(vertex_.position()))<<
+			    	" | "<<endl;
+            }else{
+			    cout <<"Mun["<<mucnt<<"]" <<
+			    	" | n_mu = "<< muons.size()<<
+			    	" | pt = "<<mu->pt()<<
+			    	" | eta = "<<fabs(mu->eta())<<
+			    	" | isPFMuon = "<< mu->isPFMuon()<<
+			    	" | isTrackerMuon() = "<< mu->isTrackerMuon()<<
+			    	" | isTightMuon() = "<< mu->isTightMuon(vertex_)<<
+                    " | nMactchedStations= "<< mu->numberOfMatchedStations()<<
+                    " | nValidHit = "<< mu->innerTrack()->numberOfValidHits() <<
+                    " | nLostHit  = "<< mu->innerTrack()->numberOfLostHits()  <<
+			    	" | "<<endl;
+            }
 		}
         // Apply only on leading muon
 		if ( mucnt==0 && mu->isPFMuon() && mu->isTrackerMuon() &&
@@ -906,12 +927,8 @@ BHAnalyzerTLBSM::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		   )
 		{
 			passed_Dimafilter = false;
-            if(DEBUG_){
-                cout<<"Mun["<<mucnt<<"] | nMactchedStations= "<< mu->numberOfMatchedStations()<<
-                " | nValidHit = "<< mu->innerTrack()->numberOfValidHits() <<
-                " | nLostHit  = "<< mu->innerTrack()->numberOfLostHits()<<endl;
-            }
 		}
+
 		ST_noCut += mu->et();
 		if(
 				mu->pt()                 >  20   &&
