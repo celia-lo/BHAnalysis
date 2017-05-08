@@ -49,11 +49,17 @@ python run_MiniAODtoNTyple.py
 This uses bh80Xcfg_MC.py
 
 ###iiib) Run on data/mc over the grid using CRAB3
+The `crab` directory provides simple snippets for systematically submitting crab jobs on different datasets using the `bh80Xcfg.py`. 
 
+Prepare a txt file in the format of 
 ```
-cd BHAnalysis
+outputFileID datasetname GlobalTag
+```
+Edit options for `bh80Xcfg.py` in `config.JobType.pyCfgParams` of `submitCrabs.py`
+```
 source /cvmfs/cms.cern.ch/crab3/crab.sh
-crab submit crabConfig_2016G.py
+cd crab
+python submitCrabs.py 
 ```
 ##2) Useful links:
 * Data Aggregation Service : https://cmsweb.cern.ch/das/
