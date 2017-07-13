@@ -44,9 +44,9 @@ Check which global tag to use from Global Tags and MiniAOD
 To run a list of signal samples, 
 ```
 vim run_MiniAODtoNTuple.py
-python run_MiniAODtoNTyple.py
+python run_MiniAODtoNTuple.py
 ```
-This uses bh80Xcfg_MC.py
+This uses bh80Xcfg.py
 
 ###iiib) Run on data/mc over the grid using CRAB3
 The `crab` directory provides simple snippets for systematically submitting crab jobs on different datasets using the `bh80Xcfg.py`. 
