@@ -55,6 +55,16 @@ options.register('reportEvery',
                 VarParsing.VarParsing.multiplicity.singleton,
                 VarParsing.VarParsing.varType.int,
                 "Report cerr Every X events")
+options.register('eventWeight',
+                1.0,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.float,
+                "Weight to assign events in the TTree")
+options.register('eventType',
+                1.0,
+                VarParsing.VarParsing.multiplicity.singleton,
+                VarParsing.VarParsing.varType.float,
+                "Number used to distguish these particular type of events")
 
 
 options.parseArguments()
@@ -326,6 +336,8 @@ else:
   muonInputTag = cms.InputTag('slimmedMETs')
 
 process.bhana = cms.EDAnalyzer('BHAnalyzerTLBSM',
+  EvT                = cms.double(options.eventType),
+  EW                 = cms.double(options.eventWeight),
   beamSpot           = cms.InputTag('offlineBeamSpot'),
   electronTag        = cms.InputTag("slimmedElectrons"),
   muonTag            = cms.InputTag("slimmedMuons"),

@@ -169,6 +169,8 @@ class BHAnalyzerTLBSM : public edm::EDAnalyzer {
 
 		//TTree
 		TTree* tree;
+        double EW;
+        double EvT;
 		float JetE[25];
 		float JetPx[25];
 		float JetPy[25];
@@ -345,6 +347,8 @@ BHAnalyzerTLBSM::BHAnalyzerTLBSM(const edm::ParameterSet& iConfig):
 
 {
 	//now do what ever initialization is needed
+    EW                        = iConfig.getParameter<double>("EW");
+    EvT                       = iConfig.getParameter<double>("EvT");
 	beamSpotToken_            = consumes<reco::BeamSpot>(iConfig.getParameter<edm::InputTag>("beamSpot"));
 	eleLabelToken_            = mayConsume<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electronTag"));
 	vtxMiniAODToken_          = mayConsume<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("verticesMiniAOD"));
@@ -1112,6 +1116,8 @@ void BHAnalyzerTLBSM::beginJob()
 	tree = fs_->make<TTree>("t","t");
 	//h_norm = new TH1F("h_norm","",500,0,50000);
 
+	tree->Branch("EW"                   ,  &EW                   , "EW/D"                       );
+	tree->Branch("EvT"                  ,  &EvT                  , "EvT/D"                      );
 	tree->Branch("NJets"                ,  &NJets                , "NJets/I"                    );
 	tree->Branch("JetE"                 ,  &JetE                 , "JetE[25]/F"                 );
 	tree->Branch("JetPx"                ,  &JetPx                , "JetPx[25]/F"                );
